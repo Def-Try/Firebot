@@ -15,13 +15,10 @@ import youtube_dl
 from async_timeout import timeout
 from db import DB
 from concurrent.futures import ThreadPoolExecutor
-
 #####################################
 ver=6.0
 build=123.1
-
 init()
-
 client = commands.Bot(command_prefix = '$')
 client.remove_command( 'help' )
 TOKEN = open('config/token.txt' , 'r').readline()
@@ -43,8 +40,6 @@ guilds=0
 @client.event
 async def on_guild_join(guild):
 	print("New guild connected!")
-	#mainDB.set("guilds", len(await client.fetch_guilds(limit = None).flatten()))
-	
 async def ainput(prompt: str = "") -> str:
     with ThreadPoolExecutor(1, "AsyncInput") as executor:
         return await asyncio.get_event_loop().run_in_executor(executor, input, prompt)
@@ -66,13 +61,10 @@ async def on_message(message):
 	print(Fore.WHITE)
 	print(Back.BLACK)
 	print("----------------------------------")
-
 	msg = message.content.lower()
 	for word in bad_words:
 		if word in msg:
 			await message.delete()
-			
-
 	await client.process_commands(message)
 
 @client.event
@@ -87,11 +79,8 @@ async def on_ready():
 	change_status.start()
 	inputget.start()
 
-
-
 @tasks.loop(seconds=10)
 async def change_status():
-	
 	guilds = await client.fetch_guilds(limit = None).flatten()
 	await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'за {len(guilds)} серверами.'))
 
@@ -100,8 +89,6 @@ async def inputget():
 	ch = await ainput("channelID: ")
 	channel = client.get_channel(id=int(ch))
 	await channel.send(await ainput("message: "))
-	
-
 
 @client.command( pass_context = True)
 async def login( ctx, username, password=""):
@@ -116,7 +103,6 @@ async def login( ctx, username, password=""):
 		embed.set_author(name="Вход")
 		loginmessage = await ctx.send( embed=embed )
 		await asyncio.sleep(1)
-
 		if(password==passget):
 			await loginmessage.delete()
 			usrsDB.set("logined"+str(ctx.guild.id), "1")
@@ -127,16 +113,13 @@ async def login( ctx, username, password=""):
 			embed = discord.Embed(description="Добро пожаловать, "+str(user))
 			embed.set_author(name="Вход")
 			await ctx.send( embed=embed )
-
 		else:
 			await loginmessage.delete()
 			member = ctx.message.author
 			embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 			embed = discord.Embed(description="Введён неверный пароль!")
 			embed.set_author(name="Вход")
-			await ctx.send( embed=embed )
-
-			
+			await ctx.send( embed=embed )	
 	else:
 		member = ctx.message.author
 		embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
@@ -168,7 +151,6 @@ async def makeuser( ctx, username, password="", isadmin=None):
 		embed.set_author(name="Создание учётной записи")
 		loginmessage = await ctx.send( embed=embed )
 
-
 @client.command( pass_context = True)
 async def deleteuser( ctx, username ):
 	ia = usrsDB.get("login_admin"+str(ctx.guild.id))
@@ -176,7 +158,6 @@ async def deleteuser( ctx, username ):
 		usrsDB.delete(username+"_name")
 		usrsDB.delete(username+"_pass")
 		usrsDB.delete(username+"_admin")
-		
 		await ctx.message.delete()
 		member = ctx.message.author
 		embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
@@ -216,37 +197,19 @@ async def logined( ctx ):
 			embed.add_field(name="Тип", value="Обычный", inline=False)
 		await ctx.send( embed=embed )
 
-
-
-
-
-
-
-
-
-
-
-
-
 @client.command( pass_context = True)
 async def avatar( ctx, member: discord.Member = None ):
 	await ctx.message.delete()
 	if not member:
 		member = ctx.message.author
 	userAvatar = member.avatar_url
-
 	embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 	embed.set_author(name=f" Аватар {member}")
 	embed.set_image(url = member.avatar_url)
 	embed.set_footer(text = f"Запросил {ctx.author}", icon_url = ctx.author.avatar_url)
 	await ctx.send(embed=embed)
 
-
-
-
-
 @client.command( pass_context = True)
-
 async def hello( ctx ):
 	await ctx.message.delete()
 	author = ctx.message.author
@@ -284,7 +247,6 @@ async def warn( ctx, member: discord.Member, *, reason=None):
 
 @client.command( pass_context = True)
 @commands.has_permissions( administrator = True )
-
 async def pardon( ctx, member: discord.Member ):
 	warns = warnDB.get(str(member.id))
 	if warns < 1:
@@ -292,17 +254,12 @@ async def pardon( ctx, member: discord.Member ):
 		return
 	warns = warns - 1
 	warnDB.set(str(member.id), warns)
-
 	await ctx.send( f'{ member.mention } помилован. Теперь предупреждений ' + str(warns) )
-
-
-
 
 @client.command()
 async def tempmute(ctx, member: discord.Member, time: int, d, *, reason=None):
 	await ctx.message.delete()
 	guild = ctx.guild
-
 	for role in guild.roles:
 		if role.name == "firebot-muted":
 			role_o = discord.utils.get( ctx.message.guild.roles, name = 'Участник')
@@ -312,24 +269,18 @@ async def tempmute(ctx, member: discord.Member, time: int, d, *, reason=None):
 			embed.add_field(name="Причина:", value=reason, inline=False)
 			embed.add_field(name="Конец мьюта через ", value=f"{time}{d}", inline=False)
 			await ctx.send(embed=embed)
-
 			if d == "s":
 				await asyncio.sleep(time)
-
 			if d == "m":
 				await asyncio.sleep(time*60)
-
 			if d == "h":
 				await asyncio.sleep(time*60*60)
-
 			if d == "d":
 				await asyncio.sleep(time*60*60*24)
-
 			await member.remove_roles(role)
 			await member.add_roles(role_o)
 			embed = discord.Embed(title="Размьют", description=f"{member.mention} размьючен", colour=discord.Colour.light_gray())
 			await ctx.send(embed=embed)
-
 			return
 
 @client.command()
@@ -349,7 +300,6 @@ async def tempban(ctx, member: discord.Member, time: int, d, *, reason=None):
 			return
 		if reason == None:
 			reason = "просто так"
-
 		embed = discord.Embed(title="Забанен!", description=f"{member.mention} временно забанен ", colour=discord.Colour.light_gray())
 		embed.add_field(name="Причина:", value=reason, inline=False)
 		embed.add_field(name="Конец бана через ", value=f"{time}{d}", inline=False)
@@ -357,25 +307,18 @@ async def tempban(ctx, member: discord.Member, time: int, d, *, reason=None):
 		message = f"Ты был забанен на {ctx.guild.name} с причиной {reason}. Разбан через {time}{d}"
 		await member.send(message)
 		await ctx.send(embed=embed)
-
 		if d == "s":
 			await asyncio.sleep(time)
-
 		if d == "m":
 			await asyncio.sleep(time*60)
-
 		if d == "h":
 			await asyncio.sleep(time*60*60)
-
 		if d == "d":
 			await asyncio.sleep(time*60*60*24)
-
 		await ctx.guild.unban(member)
 		embed = discord.Embed(title="Разбан", description=f"{member.mention} разбанен", colour=discord.Colour.light_gray())
 		await ctx.send(embed=embed)
-
 		return
-
 	else:
 		await ctx.message.delete()
 		member = ctx.message.author
@@ -384,11 +327,7 @@ async def tempban(ctx, member: discord.Member, time: int, d, *, reason=None):
 		embed.set_author(name="Создание учётной записи")
 		loginmessage = await ctx.send( embed=embed )
 
-
-
-
 @client.command( pass_context = True)
-#@commands.has_permissions( administrator = True )
 async def warns( ctx, member: discord.Member = None ):
 	rnum=1
 	await ctx.message.delete()
@@ -399,21 +338,10 @@ async def warns( ctx, member: discord.Member = None ):
 	if not warns:
 		warns = "нет"
 	emb.add_field( name = f'У { member.name } '+str(warns)+' предупреждений.'.format( ), value = "Информация может быть неточна из-за предупреждений на других серверах")
-
-	
 	for rnum in range(warns):
 		rnum=rnum+1
 		emb.add_field( name = 'Предупреждение {}'.format( rnum ), value = warnDB.get(str(member.id)+"_"+str(rnum)))
-
-
 	await ctx.send( embed=emb )
-
-
-
-
-
-
-	
 
 @client.command( pass_context = True)
 async def id( ctx, member: discord.Member ):
@@ -434,8 +362,6 @@ async def clear( ctx, amount = 10):
 		embed.set_author(name="Создание учётной записи")
 		loginmessage = await ctx.send( embed=embed )
 	
-
-
 @client.command( pass_context = True)
 @commands.has_permissions( administrator = True )
 async def kick( ctx, member: discord.Member, *, reason = None ):
@@ -443,14 +369,10 @@ async def kick( ctx, member: discord.Member, *, reason = None ):
 	await member.kick( reason = reason )
 	await ctx.send(f'{ member.mention } Выкинут.')
 
-
 @client.command( pass_context = True)
 @commands.has_permissions( administrator = True )
 async def ban (ctx, member:discord.Member=None, reason=None):
 	await ctx.message.delete()
-	if member.id == 669581435899871264:
-		await ctx.channel.send(f"{member} - **Мой создатель**. Его нельзя забанить!")
-		return
 	if member.id == 704250627622174780:
 		await ctx.channel.send("**Я не могу забанить себя!**")
 		return
@@ -460,12 +382,9 @@ async def ban (ctx, member:discord.Member=None, reason=None):
 	if reason == None:
 		reason = "просто так"
 	message = f"Ты был забанен на {ctx.guild.name} с причиной {reason}"
-	
 	await member.send(message)
 	await ctx.guild.ban(member, reason=reason)
 	await ctx.channel.send(f"{member} Забанен!")
-
-
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -475,7 +394,6 @@ async def unban(ctx, *, user_id: int):
 		user = await client.fetch_user(user_id=user_id)
 		await ctx.guild.unban(user)
 		await ctx.send(f'Участник с ID {user_id} успешно разбанен.')
-		
 		if SEND_PUNISHMENT_PERSONAL_MESSAGE:
 			await user.send('Вы были разбанены на сервере.')
 	except discord.DiscordException:
@@ -485,11 +403,9 @@ async def unban(ctx, *, user_id: int):
 
 @client.command( pass_context = True)
 async def addbw( ctx, *, content):
-
 	file = open("config/bad-words.txt", 'a')
 	file.write("\n" + str(content))
 	file.close()
-
 	member = ctx.message.author
 	embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 	embed = discord.Embed(description="Плохое слово успешно добавлено")
@@ -499,16 +415,13 @@ async def addbw( ctx, *, content):
 
 
 @client.command( pass_context = True)
-
 async def help( ctx ):
 	await ctx.message.delete()
 	emb = discord.Embed( title = 'Команды')
-
 	emb.add_field( name = '{}clear (число)[adm]'.format( "$" ), value = 'Чистит канал')
 	emb.add_field( name = '{}ban участник) (причина*)[adm]'.format( "$" ), value = 'Выбрасывает и банит участника')
 	emb.add_field( name = '{}kick (участник)[adm]'.format( "$" ), value = 'Выбрасивает участника')
 	emb.add_field( name = '{}unban (ID участника)[adm]'.format( "$" ), value = 'Разбанивает участника')
-
 	emb.add_field( name = '{}hello'.format( "$" ), value = '"Привет" от бота')
 	emb.add_field( name = '{}mute (участник)[adm]'.format( "$" ), value = 'Мьютит участника')
 	emb.add_field( name = '{}memsend (сообщение) (участник)[adm]'.format( "$" ), value = 'Отправляет сообщение участнику в ЛС')
@@ -526,100 +439,37 @@ async def help( ctx ):
 	emb.add_field( name = '{}deleteuser (имя)[BOTADMINS]'.format( "$" ), value = 'Удаляет учётную запись')
 	emb.add_field( name = '{}showbw'.format( "$" ), value = 'Показывает плохие слова')
 	emb.add_field( name = '{}addbw (слово)[BOTADMINS]'.format( "$" ), value = 'Добавляет плохое слово')
-	
 	emb.add_field( name = 'Команды помеченные [adm] требуют права администратора'.format( "" ), value = '-------------------------------------------', inline=False)
 	emb.add_field( name = 'Аргументы помеченные * могут не вводиться'.format( "" ), value = '-------------------------------------------', inline=False)
 	emb.add_field( name = 'Команды помеченные [BOTADMINS] требуют права администратора в системе бота'.format( "" ), value = '-------------------------------------------', inline=False)
-	
-
 	await ctx.send( embed = emb )
 
 @client.command( pass_context = True)
 @commands.has_permissions( administrator = True )
-
 async def mute( ctx, member: discord.Member ):
 	await ctx.message.delete()
 	mute_role = discord.utils.get( ctx.message.guild.roles, name = 'firebot-muted')
 	user_role = discord.utils.get( ctx.message.guild.roles, name = 'Участник')
-
 	await member.add_roles( mute_role )
 	await member.remove_roles( user_role )
-
 	await ctx.send(f'{ member.name } замьючен')
 	
-
 @client.command( pass_context = True)
 @commands.has_permissions( administrator = True )
-
 async def unmute( ctx, member: discord.Member ):
 	await ctx.message.delete()
 	mute_role = discord.utils.get( ctx.message.guild.roles, name = 'firebot-muted')
 	user_role = discord.utils.get( ctx.message.guild.roles, name = 'Участник')
-
 	await member.add_roles( user_role )
 	await member.remove_roles( mute_role )
-
 	await ctx.send(f'{ member.name } размьючен')
 	
 
 @client.command( pass_context = True)
 @commands.has_permissions( administrator = True )
-
 async def memsend( ctx, arg, member:discord.Member ):
 	await ctx.message.delete()
 	await member.send(arg)
-	
-
-
-@ban.error
-async def ban_error( ctx, error):
-	if isinstance( error, commands.MissingPermissions ):
-		await ctx.send( f'{ctx.author.name}, ты не **администратор**!')
-
-	if isinstance( error, commands.MissingRequiredArgument ):
-		await ctx.send( f'{ctx.author.name}, ты забыл ввести **ID** или **имя участника**')
-
-@memsend.error
-async def memsend_error( ctx, error):
-	if isinstance( error, commands.MissingPermissions ):
-		await ctx.send( f'{ctx.author.name}, ты не **администратор**!')
-
-	if isinstance( error, commands.MissingRequiredArgument ):
-		await ctx.send( f'{ctx.author.name}, ты забыл ввести аргументы')
-
-
-@kick.error
-async def kick_error( ctx, error):
-	if isinstance( error, commands.MissingPermissions ):
-		await ctx.send( f'{ctx.author.name}, ты не **администратор**!')
-
-	if isinstance( error, commands.MissingRequiredArgument ):
-		await ctx.send( f'{ctx.author.name}, ты забыл ввести **ID** или **имя участника**')
-
-
-@mute.error
-async def mute_error( ctx, error):
-	if isinstance( error, commands.MissingPermissions ):
-		await ctx.send( f'{ctx.author.name}, ты не **администратор**!')
-
-	if isinstance( error, commands.MissingRequiredArgument ):
-		await ctx.send( f'{ctx.author.name}, ты забыл ввести **ID** или **имя участника**')
-
-
-@clear.error
-async def clear_error( ctx, error):
-	if isinstance( error, commands.MissingPermissions ):
-		await ctx.send( f'{ctx.author.name}, ты не **администратор**!')
-
-	if isinstance( error, commands.MissingRequiredArgument ):
-		await ctx.send( f'{ctx.author.name}, ты имеешь незавершённые аргументы: **количество сообщений**')
-
-
-
-
-
-
-
 
 @client.command( pass_context = True)
 async def load( ctx, *, pname=None ):
@@ -638,9 +488,6 @@ async def load( ctx, *, pname=None ):
 		if(i==100):
 			await message.edit(content="Загрузка "+pname+" завершена")
 
-
-	
-
 @client.command( pass_context = True)
 async def leet( ctx, *, input=None ):
 	logined = usrsDB.get("logined")
@@ -651,11 +498,9 @@ async def leet( ctx, *, input=None ):
 		replacements = ( ('A','4'), ('B','8'), ('C','C'),('D','d'),('E','3'),('F','PH'),('G','9'),('H','H'),('I','1'),('J','J'),
 			('K','K'),('L','L'),('M','m'),('N','N'),('O','0'),('P','P'),('Q','Q'),('R','r'),('S','2'),('T','7'),('U','u'),('V','v'),
 			('W','w'),('X','X'),('Y','y'),('Z','2'),
-
 			('a','4'), ('b','8'), ('c','c'),('d','d'),('e','3'),('f','ph'),('g','9'),('h','h'),('i','1'),('j','j'),('k','k'),
 			('l','l'),('m','m'),('n','n'),('o','0'),('p','p'),('q','q'),('r','r'),('s','2'),('t','7'),('u','u'),('v','v'),('w','w'),
-			('x','x'),('y','y'),('z','2')
-						 )
+			('x','x'),('y','y'),('z','2'))
 		my_string = input
 		new_string = my_string
 		for old, new in replacements:
@@ -668,7 +513,6 @@ async def leet( ctx, *, input=None ):
 		embed.set_author(name="Ошибка 002")
 		await ctx.send( embed=embed )
 		
-
 @client.command( pass_context = True)
 async def leetpro( ctx, *, input=None ):
 	logined = usrsDB.get("logined")
@@ -692,7 +536,6 @@ async def leetpro( ctx, *, input=None ):
 		embed = discord.Embed(description="Вы не вошли в систему!")
 		embed.set_author(name="Ошибка 002")
 		await ctx.send( embed=embed )
-		
 
 @client.command( pass_context = True)
 async def unlogin( ctx ):	
@@ -703,7 +546,6 @@ async def unlogin( ctx ):
 		usrsDB.set("logined"+str(ctx.guild.id), "0")
 		usrsDB.set("logined_as"+str(ctx.guild.id), "")
 		usrsDB.set("login_admin"+str(ctx.guild.id), "0")
-
 		member = ctx.message.author
 		embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 		embed = discord.Embed(description="Вы вышли из системы, "+str(user))
@@ -715,7 +557,6 @@ async def unlogin( ctx ):
 		embed = discord.Embed(description="Никто ещё не вошёл в систему!")
 		embed.set_author(name="Выход")
 		await ctx.send( embed=embed )
-
 
 @client.command( pass_context = True)
 async def delete( ctx, *, file):
@@ -729,7 +570,6 @@ async def delete( ctx, *, file):
 			embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 			embed = discord.Embed(description="Файл удалён!")
 			embed.set_author(name="Удаление")
-			#👀😎
 			await ctx.send( embed=embed )
 			os.remove(file)
 		else:
@@ -800,14 +640,12 @@ async def cmd( ctx, *, cmd):
 			embed = discord.Embed(description="Вы не администратор системы бота!")
 			embed.set_author(name="Ошибка 003")
 			await ctx.send( embed=embed )
-
 	else:
 		member = ctx.message.author
 		embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 		embed = discord.Embed(description="Вы не вошли в систему!")
 		embed.set_author(name="Ошибка 002")
 		await ctx.send( embed=embed )
-
 
 @client.command( pass_context = True)
 async def md( ctx, *, name):
@@ -843,14 +681,11 @@ async def rd( ctx, *, name):
 	adminusr=usrsDB.get("login_admin"+str(ctx.guild.id))
 	if(logined=="1"):
 		if (adminusr=="1"):
-
 			member = ctx.message.author
 			embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 			embed = discord.Embed(description="Папка удалена!")
 			embed.set_author(name="Удаление")
-			#👀😎
 			await ctx.send( embed=embed )
-		
 			os.rmdir(name)
 		else:
 			member = ctx.message.author
@@ -878,7 +713,6 @@ async def cd( ctx, *, dir):
 			embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 			embed = discord.Embed(description="Переход в папку!")
 			embed.set_author(name="Переход")
-			#👀😎
 			await ctx.send( embed=embed )
 		else:
 			member = ctx.message.author
@@ -930,15 +764,12 @@ async def create( ctx, *, name):
 	if(logined=="1"):
 		if (adminusr=="1"):
 			await ctx.message.delete()
-	
 			file = open(name, 'w')
 			file.close()
-
 			member = ctx.message.author
 			embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 			embed = discord.Embed(description="Файл создан!")
 			embed.set_author(name="Создание")
-			#👀😎
 			await ctx.send( embed=embed )
 		else:
 			member = ctx.message.author
@@ -961,7 +792,6 @@ async def write( ctx, name, *, content):
 	if(logined=="1"):
 		if (adminusr=="1"):
 			await ctx.message.delete()
-	
 			file = open(name, 'a')
 			file.write("\n" + str(content))
 			file.close()
@@ -969,7 +799,6 @@ async def write( ctx, name, *, content):
 			embed = discord.Embed(color=member.color, timestamp=ctx.message.created_at)
 			embed = discord.Embed(description="Файл изменён, сохранён и закрыт")
 			embed.set_author(name="Изменение")
-			#👀😎
 			await ctx.send( embed=embed )
 		else:
 			member = ctx.message.author
@@ -996,8 +825,6 @@ async def embed( ctx, name, footer, *, content ):
 	embed.set_author(name=name)
 	await ctx.send( embed=embed )
 
-
-
 @client.command( pass_context = True)
 async def guess( ctx ):
 	await ctx.message.delete()
@@ -1017,7 +844,6 @@ async def IThink( ctx, *, num ):
 		await ctx.send( "Моё число меньше твоего." )
 	elif(num_get>int(num)):
 		await ctx.send( "Моё число больше твоего." )
-
 
 @client.command( pass_context = True)
 async def showbw( ctx ):
@@ -1050,7 +876,6 @@ async def setdelay(ctx, seconds: int):
 async def vote( ctx, member: discord.Member ):
 	voted = mainDB.get("kick_"+str(member.id)+"_voted_"+str(stx.author.id) )
 	votes = mainDB.get("kick_"+str(member.id)+"_votes")
-
 	if not voted:
 		votes = votes + 1
 		mainDB.set("kick_"+str(member.id)+"_votes", votes)
@@ -1060,44 +885,17 @@ async def vote( ctx, member: discord.Member ):
 		await ctx.send("Набрано достаточное количество голосов")
 		await member.kick( reason = None )
 
-
-
-
 @client.command( pass_context = True)
 async def shutdown( ctx, *, password ):
-	if password=="2077":
+	if password=="A6F4h8KK":
 		await ctx.message.delete()
-		message = await ctx.send("ВЫКЛЮЧЕНИЕ")
-		await message.edit(content="ЭКСТРЕННОЕ ВЫКЛЮЧЕНИЕ ")
+		await ctx.send("ЭКСТРЕННОЕ ВЫКЛЮЧЕНИЕ")
 		message = await ctx.send("00:10")
 		await asyncio.sleep(1)
-		await message.edit(content="00:09 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:08 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:07 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:06 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:05 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:04 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:03 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:02 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:02 ")
-		await asyncio.sleep(1)
-		await message.edit(content="00:00 ")
-		await asyncio.sleep(1)
+		for i in range(9, 0, -1):
+			await message.edit(content="00:0"+str(i))
+			await asyncio.sleep(1)
 		await message.edit(content="-=-=-=-=-=-=-=-=-=- ")
 		os.abort()
-
-
-
-
-
-
 
 client.run(TOKEN)
